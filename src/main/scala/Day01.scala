@@ -2,7 +2,8 @@ package advent
 
 object Day01 {
 
-  def run(data: List[Int]): Unit = {
+  def run(): Unit = {
+    val data = readData("data/Day01.txt")
     println(s"Day01.part1 = ${part1(data)}")
     println(s"Day01.part2 = ${part2(data)}")
   }
