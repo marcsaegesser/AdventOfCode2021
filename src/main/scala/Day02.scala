@@ -3,7 +3,7 @@ package advent
 object Day02 {
 
   def run(): Unit = {
-    val commands = readData("data/Day02.txt")
+    val commands = readData(dataFile)
     println(s"Day02.part1 = ${part1(commands)}")
     println(s"Day02.part2 = ${part2(commands)}")
   }
@@ -66,11 +66,13 @@ object Day02 {
   def parseData(data: List[String]): List[Command] =
     data.map(parseCommand)
 
-  val testData =
+  def testData =
     """forward 5
       |down 5
       |forward 8
       |up 3
       |down 8
       |forward 2""".stripMargin.linesIterator.toList
+
+  val dataFile = "data/Day02.txt"
 }

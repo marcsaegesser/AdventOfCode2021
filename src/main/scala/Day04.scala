@@ -5,16 +5,16 @@ import advent.Day04.BingoBoard
 object Day04 {
 
   def run(): Unit = {
-    val game = readData("data/Day04.txt")
+    val game = readData(dataFile)
     println(s"Day04.part1 = ${findWinningBoard(game)}")
     println(s"Day04.part2 = ${findLastWinningBoard(game)}")
   }
 
-  def findWinningBoard(game: BingoGame): Option[(Int, BingoBoard)] = {
-    def helper(g: BingoGame): Option[(Int, BingoBoard)] = {
+  def findWinningBoard(game: BingoGame): Option[Int] = {
+    def helper(g: BingoGame): Option[(Int)] = {
       playRound(g).flatMap(n =>
         n.boards.find(isWinner)
-          .map(w => (score(g.numbers.head, w), w))
+          .map(w => score(g.numbers.head, w))
           .orElse(helper(n))
       )
     }
@@ -22,15 +22,15 @@ object Day04 {
     helper(game)
   }
 
-  def findLastWinningBoard(game: BingoGame): Option[(Int, BingoBoard)] = {
-    def helper(g: BingoGame, prev: Option[(Int, BingoBoard)] ): Option[(Int, BingoBoard)] = {
+  def findLastWinningBoard(game: BingoGame): Option[Int] = {
+    def helper(g: BingoGame, prev: Option[Int] ): Option[Int] = {
       if(g.boards.isEmpty) prev
       else
         playRound(g).flatMap(next =>
           val (w, l) = next.boards.partition(isWinner)
             w.lastOption match {
               case None    => helper(next, prev)
-              case Some(b) => helper(next.copy(boards=l), Some(score(g.numbers.head, b), b))
+              case Some(b) => helper(next.copy(boards=l), Some(score(g.numbers.head, b)))
             }
         )
     }
@@ -115,4 +115,6 @@ object Day04 {
                    |18  8 23 26 20
                    |22 11 13  6  5
                    | 2  0 12  3  7""".stripMargin.linesIterator
+
+  val dataFile = "data/Day04.txt"
 }

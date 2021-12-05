@@ -3,7 +3,7 @@ package advent
 object Day01 {
 
   def run(): Unit = {
-    val data = readData("data/Day01.txt")
+    val data = readData(dataFile)
     println(s"Day01.part1 = ${part1(data)}")
     println(s"Day01.part2 = ${part2(data)}")
   }
@@ -33,6 +33,8 @@ object Day01 {
       260,
       263
     )
+
+  val dataFile = "data/Day01.txt"
 }
 
 
