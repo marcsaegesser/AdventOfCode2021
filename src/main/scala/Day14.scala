@@ -8,54 +8,55 @@ object Day14 {
     println(s"Day14.part2 = ${part2(template, mapping)}")
   }
 
-  def part1(template: String, mapping: Map[String, String]): Long = {
+  type Pair = (Char, Char)
+
+  def part1(template: String, mapping: Map[Pair, Char]): Long = {
     val result = stepN(pairFreqs(template), mapping, 10)
-    val keys = charFreqs(template, result).map((k, v) => (v, k)).keySet
-    keys.max - keys.min
+    val freqs = charFreqs(template, result).values.toSet
+    freqs.max - freqs.min
   }
 
-  def part2(template: String, mapping: Map[String, String]): Long = {
+  def part2(template: String, mapping: Map[Pair, Char]): Long = {
     val result = stepN(pairFreqs(template), mapping, 40)
-    val keys = charFreqs(template, result).map((k, v) => (v, k)).keySet
-    keys.max - keys.min
+    val freqs = charFreqs(template, result).values.toSet
+    freqs.max - freqs.min
   }
 
-  def pairFreqs(template: String): Map[String, Long] =
+  def pairFreqs(template: String): Map[Pair, Long] =
     template.sliding(2, 1)
       .toList
+      .map(p => (p(0), p(1)))
       .groupBy(identity).map((k, v) => (k, v.size.toLong))
 
-  def charFreqs(template: String, pairFreqs: Map[String, Long]): Map[Char, Long] =
+  def charFreqs(template: String, pairFreqs: Map[Pair, Long]): Map[Char, Long] =
     pairFreqs.foldLeft(Map.empty[Char, Long]){ case (m, (k, v)) =>
       m.updatedWith(k.head)(_.map(_+v).orElse(Some(v)))
     }.updatedWith(template.last)(_.map(_+1).orElse(Some(1)))
 
-  def stepN(freqs: Map[String, Long], mapping: Map[String, String], n: Int): Map[String, Long] =
+  def stepN(freqs: Map[Pair, Long], mapping: Map[Pair, Char], n: Int): Map[Pair, Long] =
     if(n == 0) freqs
     else       stepN(step(freqs, mapping), mapping, n-1)
 
-  def step(freq: Map[String, Long], mapping: Map[String, String]): Map[String, Long] = {
-    freq.foldLeft(Map.empty[String, Long]) { case (fs, (p, n)) =>
+  def step(freq: Map[Pair, Long], mapping: Map[Pair, Char]): Map[Pair, Long] = {
+    freq.foldLeft(Map.empty[Pair, Long]) { case (fs, (p, n)) =>
       val c = mapping(p)
-      val p1 = s"${p(0)}$c"
-      val p2 = s"$c${p(1)}"
       fs
-        .updatedWith(p1)(_.map(_+n).orElse(Some(n)))
-        .updatedWith(p2)(_.map(_+n).orElse(Some(n)))
+        .updatedWith((p._1, c))(_.map(_+n).orElse(Some(n)))
+        .updatedWith((c, p._2))(_.map(_+n).orElse(Some(n)))
     }
   }
 
   val templateRegex = """(\w+)""".r
-  val pairRegex = """(\w+)\s*->\s*(\w+)""".r
+  val pairRegex = """(\w)(\w)\s*->\s*(\w)""".r
 
-  def readData(f: String): (String, Map[String, String]) =
+  def readData(f: String): (String, Map[Pair, Char]) =
     parseData(io.Source.fromFile(f).getLines)
 
-  def parseData(lines: Iterator[String]): (String, Map[String, String]) = {
-    lines.foldLeft(("", Map.empty[String, String])) { case ((t, m), l) =>
+  def parseData(lines: Iterator[String]): (String, Map[Pair, Char]) = {
+    lines.foldLeft(("", Map.empty[Pair, Char])) { case ((t, m), l) =>
       l match {
         case templateRegex(s) => (s, m)
-        case pairRegex(a, b)  => (t, m.updated(a, b))
+        case pairRegex(a, b, c)  => (t, m.updated((a.head, b.head), c.head))
         case _                => (t, m)
       }
     }
