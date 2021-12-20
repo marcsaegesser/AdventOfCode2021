@@ -4,6 +4,50 @@ import Math._
 
 object Day19 {
 
+  def part1(scanners: Vector[Scanner]): Set[Coord] = {
+    def helper(accum: Set[Coord], remaining: List[Scanner]) : Set[Coord] = {
+      if(remaining.isEmpty) accum
+      else {
+        ???
+      }
+    }
+
+
+    helper(scanners(0).coords.toSet, scanners.toList.tail)
+  }
+
+  def scannerOffset(s1: List[Coord], s2: List[Coord]): Option[(Int, Int, Int)] = {
+    val s1Offsets = s1.map(c1 => (c1, s1.filterNot(_ == c1).map(c2 => (c2, offsetSig(diff(c1, c2))))))
+    val s2Offsets = s2.map(c1 => (c1, s2.filterNot(_ == c1).map(c2 => (c2, offsetSig(diff(c1, c2))))))
+
+    val matches =
+      s1Offsets.map { (c1, os1) =>
+        val s = os1.map(_._2).toSet                // The set of s1's offsets
+        val x =
+          s2Offsets.map { case (c2, os2) =>
+            (c2, os2.filter((_, o) => s.contains(o))) // For each coord in s2, the offsets that match c1's offsets
+          }.maxBy(_._2.size)                          // The longest list of matching offsets
+        (c1, x)
+      }.filterNot(_._2._2.isEmpty)
+        .map { case (c1, (c2, ms)) => (c1, c2) }
+
+    if(matches.size < 12) None
+    else {
+      val xOffset = determineOffset(matches.map ((c1, c2) => (c1.x, c2.x)))
+      val yOffset = determineOffset(matches.map ((c1, c2) => (c1.y, c2.y)))
+      val zOffset = determineOffset(matches.map ((c1, c2) => (c1.z, c2.z)))
+
+      Some((xOffset, yOffset, zOffset))
+    }
+  }
+
+  def determineOffset(input: List[(Int, Int)]): Int = {
+    val a = input.map((a, b) => a+b).toSet
+    println(s"$a")
+    if(a.size == 1) a.head
+    else input.map((a, b) => a-b).toSet.head
+  }
+
   case class Offset(x: Int, y: Int, z: Int)
   case class Coord(x: Int, y: Int, z: Int)
   case class Beacon(id: Int, coord: Coord)
