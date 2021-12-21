@@ -4,25 +4,33 @@ import Math._
 
 object Day19 {
 
-  def part1(scanners: Vector[Scanner]): Set[Coord] = {
+  def mergeScanners(scanners: List[Scanner]): Set[Coord] = {
     def helper(accum: Set[Coord], remaining: List[Scanner]) : Set[Coord] = {
       if(remaining.isEmpty) accum
       else {
-        ???
+        val (m, r) = remaining.map(s => (s, scannerOffset(accum, s))).partition(_._2.isDefined)
+        println(s"$m")
+        println(s"$r")
+        val nextAccum =
+          m.foldLeft(accum) {
+            case (a, (s, Some(xo, yo, zo))) => s.map { case Coord(x, y, z) => Coord(x+xo, y+yo, z+zo)} ++ a
+            case _ => accum // Can't happen
+          }
+        helper(nextAccum, r.map(_._1))
       }
     }
 
 
-    helper(scanners(0).coords.toSet, scanners.toList.tail)
+    helper(scanners.head, scanners.tail)
   }
 
-  def scannerOffset(s1: List[Coord], s2: List[Coord]): Option[(Int, Int, Int)] = {
+  def scannerOffset(s1: Set[Coord], s2: Set[Coord])/*: Option[(Int, Int, Int)]*/ = {
     val s1Offsets = s1.map(c1 => (c1, s1.filterNot(_ == c1).map(c2 => (c2, offsetSig(diff(c1, c2))))))
     val s2Offsets = s2.map(c1 => (c1, s2.filterNot(_ == c1).map(c2 => (c2, offsetSig(diff(c1, c2))))))
 
     val matches =
       s1Offsets.map { (c1, os1) =>
-        val s = os1.map(_._2).toSet                // The set of s1's offsets
+        val s = os1.map(_._2)//.toSet                // The set of s1's offsets
         val x =
           s2Offsets.map { case (c2, os2) =>
             (c2, os2.filter((_, o) => s.contains(o))) // For each coord in s2, the offsets that match c1's offsets
@@ -41,17 +49,36 @@ object Day19 {
     }
   }
 
-  def determineOffset(input: List[(Int, Int)]): Int = {
-    val a = input.map((a, b) => a+b).toSet
-    println(s"$a")
+  def fubar(s1: Set[Coord], s2: Set[Coord]) = {
+    val s1Offsets = s1.map(c1 => (c1, s1.filterNot(_ == c1).map(c2 => (c2, diff(c1, c2)))))
+    val s2Offsets = s2.map(c1 => (c1, s2.filterNot(_ == c1).map(c2 => (c2, diff(c1, c2)))))
+
+    val matches =
+      s1Offsets.map { (c1, os1) =>
+        val s = os1.map((_, d) => offsetSig(d))                         // The set of s1's offset signatures
+        val x =
+          s2Offsets.map { case (c2, os2) =>
+            val s2 = os2.map((_, d) => offsetSig(d))
+            (c2, os1.filter((_, o) => s2.contains(offsetSig(o))), os2.filter((_, o) => s.contains(offsetSig(o)))) // For each coord in s2, the offsets that match c1's offsets
+          }.maxBy(_._3.size)                          // The longest list of matching offsets
+        (c1, x)
+      }.filterNot(_._2._2.isEmpty)
+        .map { case (c1, (c2, ms1, ms2)) => (c1, ms1, c2, ms2) }
+
+    matches
+  }
+
+  def determineOffset(input: Set[(Int, Int)]): Int = {
+    val a = input.map((a, b) => a+b)
     if(a.size == 1) a.head
     else input.map((a, b) => a-b).toSet.head
   }
 
   case class Offset(x: Int, y: Int, z: Int)
   case class Coord(x: Int, y: Int, z: Int)
-  case class Beacon(id: Int, coord: Coord)
-  case class Scanner(id: Int, coords: List[Coord])
+  // case class Beacon(id: Int, coord: Coord)
+  // case class Scanner(id: Int, coords: List[Coord])
+  type Scanner = Set[Coord]
 
   def diff(c1: Coord, c2: Coord): Offset =
     Offset(c1.x - c2.x, c1.y - c2.y, c1.z - c2.z)
@@ -59,6 +86,9 @@ object Day19 {
   def coordsMatch(c1: Coord, c2: Coord): Boolean = {
     Set(abs(c1.x), abs(c1.y), abs(c2.z)) == Set(abs(c2.x), abs(c2.y), abs(c2.z))
   }
+
+  def dist(c1: Coord, c2: Coord): Int =
+    abs(c1.x - c2.x) + abs(c1.y - c2.y) + abs(c1.z - c2.z)
 
   def coordSig(c: Coord): Set[Int] =
     Set(abs(c.x), abs(c.y), abs(c.z))
@@ -76,7 +106,8 @@ object Day19 {
       Coord(x.toInt, y.toInt, z.toInt)
     }
 
-    Scanner(id.toInt, coords)
+    coords.toSet
+    // Scanner(id.toInt, coords)
   }
 
   def parseScanners(lines: Iterator[String]): List[Scanner] = {
